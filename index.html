@@ -1,224 +1,510 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Habit</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:'Inter',sans-serif;
-  background:#0D0D0D;
-  color:#EDEDED;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>66 Days | Habit Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0D0D0D;
+            --panel-bg: #1A1A1A;
+            --text-main: #FFFFFF;
+            --text-muted: #888888;
+            --neon-green: #00FFAA;
+            --neon-red: #FF3366;
+            --border-color: #333333;
+        }
 
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:40px 20px;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
 
-h1{
-  font-weight:400;
-  font-size:18px;
-  margin-bottom:20px;
-  opacity:.7;
-}
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
 
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  background:transparent;
-  border:1px solid #222;
-  color:white;
-}
+        /* Utils & Animations */
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.6s ease-in forwards; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-button{
-  width:100%;
-  padding:12px;
-  background:white;
-  color:black;
-  border:none;
-  cursor:pointer;
-}
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
 
-.hidden{display:none}
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-start infinite;
+            color: var(--neon-green);
+        }
 
-.habit{
-  border:1px solid #222;
-  padding:10px;
-  margin-bottom:8px;
-  cursor:pointer;
-}
+        /* Typography & Inputs */
+        h1, h2, h3 { font-weight: 800; letter-spacing: -0.5px; }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 15px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
 
-.habit.active{
-  border-color:#00FFAA;
-}
+        input:focus {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 8px rgba(0, 255, 170, 0.2);
+        }
 
-/* FULLSCREEN GRID */
-.fullscreen{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100vw;
-  height:100vh;
-  padding:40px;
-  display:flex;
-  flex-direction:column;
-}
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:20px;
-  font-size:13px;
-  opacity:.6;
-}
+        button:hover {
+            background: var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.4);
+        }
 
-.grid{
-  flex:1;
-  display:grid;
-  grid-template-columns:repeat(11,1fr);
-  gap:6px;
-}
+        button.outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
 
-.cell{
-  background:#1A1A1A;
-  aspect-ratio:1;
-  cursor:pointer;
-  transition:.2s;
-}
+        button.outline:hover {
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.3);
+        }
 
-.cell.active{
-  background:#00FFAA;
-}
+        /* Views Containers */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+        }
 
-.cell.locked{
-  opacity:.2;
-  cursor:not-allowed;
-}
+        /* Auth View */
+        .auth-card {
+            background: var(--panel-bg);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
 
-.progress{
-  margin-top:15px;
-  font-size:13px;
-  opacity:.6;
-}
-</style>
+        .auth-card h2 { margin-bottom: 30px; text-align: center; }
+
+        /* Welcome View */
+        #welcome-view { text-align: center; font-size: 2rem; }
+
+        /* Setup View */
+        .habit-list { margin: 20px 0; }
+        .habit-tag {
+            display: inline-block;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.9rem;
+            color: var(--neon-green);
+        }
+
+        /* Dashboard View */
+        .dashboard-header {
+            margin-bottom: 40px;
+            margin-top: -50px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-card h3 { font-size: 2rem; color: var(--neon-green); margin-bottom: 5px; }
+        .stat-card p { color: var(--text-muted); font-size: 0.9rem; }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--neon-green);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .habit-section {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .habit-section h3 { margin-bottom: 20px; }
+
+        .grid-66 {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 8px;
+        }
+
+        .day-box {
+            aspect-ratio: 1;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .day-box:hover { border-color: var(--text-muted); }
+        
+        .day-box.done {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            color: var(--bg-color);
+            box-shadow: 0 0 10px rgba(0, 255, 170, 0.4);
+            font-weight: bold;
+        }
+
+        .day-box.missed {
+            background: var(--neon-red);
+            border-color: var(--neon-red);
+            color: var(--text-main);
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .grid-66 { grid-template-columns: repeat(6, 1fr); gap: 6px; }
+            .container { padding: 20px 15px; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="container" id="auth">
-  <h1>Connexion</h1>
-  <input id="email" placeholder="Email">
-  <input id="password" placeholder="Mot de passe">
-  <button onclick="login()">Continuer</button>
-</div>
+    <div id="auth-view" class="container">
+        <div class="auth-card fade-in">
+            <h2>H.66</h2>
+            <form id="auth-form">
+                <input type="email" id="email" placeholder="Ton adresse email" required>
+                <input type="password" id="password" placeholder="Mot de passe" required>
+                <button type="submit">Créer un compte / Connexion</button>
+            </form>
+        </div>
+    </div>
 
-<div class="container hidden" id="habits">
-  <h1>Habitudes</h1>
-  <div id="list"></div>
-  <input id="newHabit" placeholder="Nouvelle habitude">
-  <button onclick="addHabit()">Ajouter</button>
-  <button onclick="start()">Commencer</button>
-</div>
+    <div id="welcome-view" class="container hidden">
+        <h1 id="welcome-text" class="typing-cursor"></h1>
+    </div>
 
-<div id="tracker" class="fullscreen hidden">
-  <div class="topbar">
-    <div id="habitName"></div>
-    <div id="dayInfo"></div>
-  </div>
-  <div class="grid" id="grid"></div>
-  <div class="progress" id="progress"></div>
-</div>
+    <div id="setup-view" class="container hidden">
+        <div class="auth-card fade-in" style="max-width: 600px;">
+            <h2>Choisis tes habitudes</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px; text-align:center;">Quelles routines veux-tu ancrer pendant les 66 prochains jours ?</p>
+            
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="new-habit" placeholder="Ex: Lire 10 pages, Méditer 10 min...">
+                <button type="button" id="add-habit-btn" style="width: auto; padding: 0 20px;">+</button>
+            </div>
+            
+            <div id="habit-tags" class="habit-list"></div>
+            
+            <button id="start-challenge" style="margin-top: 20px;">Commencer le challenge 🔥</button>
+        </div>
+    </div>
 
-<script>
-let habits = JSON.parse(localStorage.getItem('habits')||'[]');
-let data = JSON.parse(localStorage.getItem('data')||'{}');
-let startDate = localStorage.getItem('startDate');
+    <div id="dashboard-view" class="container hidden fade-in" style="justify-content: flex-start;">
+        <div class="dashboard-header">
+            <h1>Ton Dashboard 66 Jours</h1>
+            <div class="progress-container">
+                <div id="global-progress" class="progress-bar"></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="stat-streak">0 🔥</h3>
+                    <p>Série Actuelle</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="stat-best">0 🏆</h3>
+                    <p>Meilleure Série</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="stat-percent">0%</h3>
+                    <p>Complété</p>
+                </div>
+            </div>
+        </div>
 
-function login(){
-  auth.classList.add('hidden');
-  habitsDiv.classList.remove('hidden');
-  render();
-}
+        <div id="habits-container">
+            </div>
 
-const auth=document.getElementById('auth');
-const habitsDiv=document.getElementById('habits');
+        <button id="reset-btn" class="outline">Réinitialiser le challenge</button>
+    </div>
 
-function render(){
-  list.innerHTML='';
-  habits.forEach(h=>{
-    let d=document.createElement('div');
-    d.className='habit';
-    d.innerText=h;
-    d.onclick=()=>d.classList.toggle('active');
-    list.appendChild(d);
-  });
-}
+    <script>
+        // --- STATE MANAGEMENT ---
+        let appState = {
+            user: null,
+            habits: [], // Array of objects: { name: 'Meditation', grid: [0, 0, 0...] } // 0=pending, 1=done, -1=missed
+            startDate: null
+        };
 
-function addHabit(){
-  let v=newHabit.value;
-  if(v){
-    habits.push(v);
-    localStorage.setItem('habits',JSON.stringify(habits));
-    render();
-  }
-}
+        // --- DOM ELEMENTS ---
+        const views = {
+            auth: document.getElementById('auth-view'),
+            welcome: document.getElementById('welcome-view'),
+            setup: document.getElementById('setup-view'),
+            dashboard: document.getElementById('dashboard-view')
+        };
 
-function start(){
-  let selected=[...document.querySelectorAll('.habit.active')].map(e=>e.innerText);
-  if(selected.length===0) selected=habits;
+        // --- INITIALIZATION ---
+        function init() {
+            const savedData = localStorage.getItem('h66_data');
+            if (savedData) {
+                appState = JSON.parse(savedData);
+                if (appState.habits.length > 0) {
+                    showView('dashboard');
+                    renderDashboard();
+                } else {
+                    showView('setup');
+                }
+            } else {
+                showView('auth');
+            }
+        }
 
-  let habit=selected[0];
-  data[habit]=data[habit]||Array(66).fill(false);
+        function saveData() {
+            localStorage.setItem('h66_data', JSON.stringify(appState));
+        }
 
-  if(!startDate){
-    startDate=new Date().toISOString();
-    localStorage.setItem('startDate',startDate);
-  }
+        function showView(viewName) {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            views[viewName].classList.remove('hidden');
+        }
 
-  localStorage.setItem('data',JSON.stringify(data));
+        // --- 1. AUTHENTICATION ---
+        document.getElementById('auth-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            appState.user = email;
+            saveData();
+            
+            showView('welcome');
+            const welcomeEl = document.getElementById('welcome-text');
+            typeWriter(`Bienvenue, ${email.split('@')[0]}...`, welcomeEl, () => {
+                setTimeout(() => { showView('setup'); }, 1000);
+            });
+        });
 
-  habitsDiv.classList.add('hidden');
-  tracker.classList.remove('hidden');
-  renderGrid(habit);
-}
+        // Typing Effect function
+        function typeWriter(text, element, callback) {
+            let i = 0;
+            element.innerHTML = '';
+            const speed = 50;
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    element.classList.remove('typing-cursor');
+                    callback();
+                }
+            }
+            type();
+        }
 
-function renderGrid(habit){
-  habitName.innerText=habit;
+        // --- 2. SETUP HABITS ---
+        let tempHabits = [];
+        document.getElementById('add-habit-btn').addEventListener('click', addHabitToSetup);
+        document.getElementById('new-habit').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); addHabitToSetup(); }
+        });
 
-  let gridEl=document.getElementById('grid');
-  gridEl.innerHTML='';
+        function addHabitToSetup() {
+            const input = document.getElementById('new-habit');
+            const val = input.value.trim();
+            if (val && !tempHabits.includes(val)) {
+                tempHabits.push(val);
+                renderSetupTags();
+                input.value = '';
+            }
+        }
 
-  let start=new Date(startDate);
-  let today=new Date();
-  let diff=Math.floor((today-start)/(1000*60*60*24));
+        function renderSetupTags() {
+            const container = document.getElementById('habit-tags');
+            container.innerHTML = tempHabits.map(h => `<span class="habit-tag">${h}</span>`).join('');
+        }
 
-  data[habit].forEach((v,i)=>{
-    let c=document.createElement('div');
+        document.getElementById('start-challenge').addEventListener('click', () => {
+            if (tempHabits.length === 0) return alert("Ajoute au moins une habitude !");
+            
+            appState.habits = tempHabits.map(name => ({
+                name: name,
+                grid: new Array(66).fill(0)
+            }));
+            appState.startDate = new Date().toISOString();
+            saveData();
+            showView('dashboard');
+            renderDashboard();
+        });
 
-    if(i>diff) c.className='cell locked';
-    else c.className='cell'+(v?' active':'');
+        // --- 3. DASHBOARD & 66-DAY GRID ---
+        function renderDashboard() {
+            const container = document.getElementById('habits-container');
+            container.innerHTML = '';
 
-    if(i<=diff){
-      c.onclick=()=>{
-        data[habit][i]=!data[habit][i];
-        localStorage.setItem('data',JSON.stringify(data));
-        renderGrid(habit);
-      }
-    }
+            appState.habits.forEach((habit, habitIndex) => {
+                const section = document.createElement('div');
+                section.className = 'habit-section fade-in';
+                
+                let gridHTML = `<div class="grid-66">`;
+                for (let i = 0; i < 66; i++) {
+                    const state = habit.grid[i];
+                    let stateClass = '';
+                    let content = i + 1;
+                    
+                    if (state === 1) { stateClass = 'done'; content = '✓'; }
+                    if (state === -1) { stateClass = 'missed'; content = '✗'; }
 
-    gridEl.appendChild(c);
-  });
+                    gridHTML += `<div class="day-box ${stateClass}" onclick="toggleDay(${habitIndex}, ${i})">${content}</div>`;
+                }
+                gridHTML += `</div>`;
 
-  dayInfo.innerText = 'Jour ' + Math.min(diff+1,66) + '/66';
+                section.innerHTML = `<h3>${habit.name}</h3>${gridHTML}`;
+                container.appendChild(section);
+            });
 
-  let done=data[habit].filter(x=>x).length;
-  progress.innerText = done + '/66 complétés';
-}
-</script>
+            updateStats();
+        }
 
+        // Toggle: 0 (Pending) -> 1 (Done) -> -1 (Missed) -> 0
+        window.toggleDay = function(habitIndex, dayIndex) {
+            const currentState = appState.habits[habitIndex].grid[dayIndex];
+            let nextState = 0;
+            if (currentState === 0) nextState = 1;
+            else if (currentState === 1) nextState = -1;
+            else nextState = 0;
+
+            appState.habits[habitIndex].grid[dayIndex] = nextState;
+            saveData();
+            renderDashboard(); // Re-render to update UI and stats
+        }
+
+        // --- 4. STATS & PROGRESSION ---
+        function updateStats() {
+            let totalDays = appState.habits.length * 66;
+            let doneDays = 0;
+            let currentStreak = 0;
+            let bestStreak = 0;
+
+            // Simple Streak calculation (looks at all habits globally for simplicity, 
+            // streak breaks if any habit is missed or pending in the sequence)
+            // A more complex tracker would have per-habit streaks, but global is motivating!
+            
+            // Calculate total done
+            appState.habits.forEach(habit => {
+                doneDays += habit.grid.filter(day => day === 1).length;
+            });
+
+            // Global percent
+            const percent = Math.round((doneDays / totalDays) * 100) || 0;
+            document.getElementById('stat-percent').innerText = `${percent}%`;
+            document.getElementById('global-progress').style.width = `${percent}%`;
+
+            // Simple Global Streak calculation:
+            // Checks columns vertically. If day 'x' is done for ALL habits, streak++.
+            let tempStreak = 0;
+            for (let i = 0; i < 66; i++) {
+                let allDoneThisDay = true;
+                appState.habits.forEach(habit => {
+                    if (habit.grid[i] !== 1) allDoneThisDay = false;
+                });
+
+                if (allDoneThisDay) {
+                    tempStreak++;
+                    currentStreak = tempStreak;
+                    if (tempStreak > bestStreak) bestStreak = tempStreak;
+                } else {
+                    tempStreak = 0; 
+                }
+            }
+
+            document.getElementById('stat-streak').innerText = `${currentStreak} 🔥`;
+            document.getElementById('stat-best').innerText = `${bestStreak} 🏆`;
+        }
+
+        // --- RESET ---
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if(confirm("Es-tu sûr de vouloir tout recommencer ? Cela effacera toute ta progression.")) {
+                appState.habits = [];
+                tempHabits = [];
+                saveData();
+                showView('setup');
+                document.getElementById('habit-tags').innerHTML = '';
+            }
+        });
+
+        // Start App
+        init();
+    </script>
 </body>
 </html>
